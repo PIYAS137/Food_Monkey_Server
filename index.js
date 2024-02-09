@@ -43,6 +43,18 @@ async function run() {
         const purchaseCollection = client.db("FoodMonkeyDB").collection('purchaseCollection');
         // collections===========================>>>>
 
+        // + get Admin status ===================>>>>>
+        app.get('/adminstatus/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { user_email: email };
+            const result = await userCollections.findOne(query);
+            if (result?.user_status === 'admin') {
+                res.send({ status: 1 }) // admin
+            } else {
+                res.send({ status: -1 }) // user
+            }
+        })
+
         // + create user API ===================>>>>>
         app.post('/user', async (req, res) => {
             const data = req.body;
@@ -167,11 +179,18 @@ async function run() {
             res.send(result);
         })
 
+        // get area wise restaurns API ======>>>>>>
+        app.get('/resfoods/:resArea', async (req, res) => {
+            const name = req.params.resArea;
+            const query = { res_city: name };
+            const result = await restaurantsCollections.find(query).toArray();
+            res.send(result);
+        })
+
         // place a item in cart API ========>>>>>
         app.post('/cart', async (req, res) => {
             const data = req.body;
-            console.log(data);
-            const query = { foodId: data?.foodId , orderUserEmail:data?.orderUserEmail };
+            const query = { foodId: data?.foodId, orderUserEmail: data?.orderUserEmail };
             const isExist = await cartCollection.findOne(query);
             if (isExist) {
                 res.send({ flag: -1 }) // alreay exist !
@@ -182,19 +201,25 @@ async function run() {
         })
 
         // + get an user all cart item API =======>>>>>
-        app.get('/cart/:email',async(req,res)=>{
+        app.get('/cart/:email', async (req, res) => {
             const email = req.params.email;
-            const query = {orderUserEmail :email};
+            const query = { orderUserEmail: email };
             const result = await cartCollection.find(query).toArray();
             res.send(result);
         })
 
+        // + get all cart data API ==============>>>>>>
+        app.get('/carts', async (req, res) => {
+            const result = await cartCollection.find({}).toArray();
+            res.send(result);
+        })
+
         // place order API =================>>>>>
-        app.post('/purchase',async(req,res)=>{
+        app.post('/purchase', async (req, res) => {
             const data = req.body;
-            const query = {orderUserEmail : data?.user_email}
+            const query = { orderUserEmail: data?.user_email }
             const result = await purchaseCollection.insertOne(data);
-            if(result.insertedId){
+            if (result.insertedId) {
                 // delete all items from cart by user email
                 const tempResult = await cartCollection.deleteMany(query);
             }
@@ -202,14 +227,18 @@ async function run() {
         })
 
         // + get an user all purchase datas ======>>>>
-        app.get('/purchase',async(req,res)=>{
+        app.get('/purchase', async (req, res) => {
             const email = req.query.email;
-            const query = {user_email:email};
+            const query = { user_email: email };
             const result = await purchaseCollection.find(query).toArray();
             res.send(result);
         })
 
-
+        // + get all user all purchase datas ======>>>>
+        app.get('/purchases', async (req, res) => {
+            const result = await purchaseCollection.find({}).toArray();
+            res.send(result);
+        })
 
 
 
