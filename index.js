@@ -40,6 +40,7 @@ async function run() {
         const restaurantsCollections = client.db("FoodMonkeyDB").collection('restaurantsCollections');
         const foodsCollections = client.db("FoodMonkeyDB").collection('foodsCollections');
         const cartCollection = client.db("FoodMonkeyDB").collection('cartCollection');
+        const purchaseCollection = client.db("FoodMonkeyDB").collection('purchaseCollection');
         // collections===========================>>>>
 
         // + create user API ===================>>>>>
@@ -166,19 +167,6 @@ async function run() {
             res.send(result);
         })
 
-        // dashboard home calculation API ====>>>>>
-        // app.get('/dashboard',async(req,res)=>{
-        //     const foods = await foodsCollections.find({}).toArray();
-        //     const restaurants = await restaurantsCollections.find({}).toArray();
-        //     const users = await userCollections.find({}).toArray();
-        //     const finalObj = {
-        //         foods_count : foods.length,
-        //         restaurants_count : restaurants.length,
-        //         users:users,
-        //     }
-        //     res.send(finalObj)
-        // })
-
         // place a item in cart API ========>>>>>
         app.post('/cart', async (req, res) => {
             const data = req.body;
@@ -201,6 +189,25 @@ async function run() {
             res.send(result);
         })
 
+        // place order API =================>>>>>
+        app.post('/purchase',async(req,res)=>{
+            const data = req.body;
+            const query = {orderUserEmail : data?.user_email}
+            const result = await purchaseCollection.insertOne(data);
+            if(result.insertedId){
+                // delete all items from cart by user email
+                const tempResult = await cartCollection.deleteMany(query);
+            }
+            res.send(result);
+        })
+
+        // + get an user all purchase datas ======>>>>
+        app.get('/purchase',async(req,res)=>{
+            const email = req.query.email;
+            const query = {user_email:email};
+            const result = await purchaseCollection.find(query).toArray();
+            res.send(result);
+        })
 
 
 
